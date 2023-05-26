@@ -60,14 +60,14 @@ public class IMDBStudent20201018
 			String o_value = "";
 			if(fileM) {
 				joinKey = Integer.parseInt(splitLine[0]);
-				o_value = "M,"+ splitLine[1]+","+splitLine[2];
+				o_value = "M::"+ splitLine[1]+"::"+splitLine[2];
 				outputKey.set(joinKey);
 		                outputValue.set(o_value);
                 	        context.write(outputKey, outputValue);
 			}
 			else {
 				joinKey = Integer.parseInt(splitLine[1]);
-				o_value = "R,"+ splitLine[2];
+				o_value = "R::"+ splitLine[2];
 				outputKey.set(joinKey);
 				outputValue.set(o_value);
 				context.write(outputKey, outputValue);
@@ -93,29 +93,32 @@ public class IMDBStudent20201018
 			String genre = "";
 			double sumRate = 0;
 			double count = 0;
+			double av_rate = 0;
 			boolean checkFantasy = false;
 			for (Text val : values) {
-				StringTokenizer st = new StringTokenizer(val.toString(), ",");
-				String file_type = st.nextToken();
+				String line = val.toString();
+        	                String[] splitLine = line.split("::");
+	
+				String file_type = splitLine[0];
 				if(file_type.equals("M")) {
-					m_name = st.nextToken().trim();
-					genre = st.nextToken();
-                                	StringTokenizer st2 = new StringTokenizer(genre, "|");
+					m_name = splitLine[1];
+					genre = splitLine[2];
+				
+                                	StringTokenizer st = new StringTokenizer(genre, "|");
 		
-                	                while(st2.hasMoreTokens()){
-                        	                if(st2.nextToken().equals("Fantasy")){
-						       	checkFantasy = true;
-                                        	}
-                                	}
-
+                	               	while(st.hasMoreTokens()){
+                        	               	if(st.nextToken().equals("Fantasy")){
+					       		checkFantasy = true;
+                                       		}
+                               		}
 				}
 				else {
-					sumRate += Double.parseDouble(st.nextToken());
+					sumRate += Double.parseDouble(splitLine[1]);
 					count += 1;
 				}
 			}
 			if(checkFantasy){
-				double av_rate = sumRate/count;
+				av_rate = sumRate/count;
                         	insertMovie(queue, m_name, av_rate, topK);
 			}
 
