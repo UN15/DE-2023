@@ -22,7 +22,7 @@ public class YouTubeStudent20201018
                 }
 
                 public String getString(){
-                        return category+" "+ av_rate;
+                        return category+"|"+ av_rate;
                 }
 
         }
@@ -50,14 +50,15 @@ public class YouTubeStudent20201018
        }
 	
 	public static class YouTubeStudent20201018Mapper1 extends Mapper<Object, Text, Text, DoubleWritable> {
+		private Text outputKey = new Text();
+		private DoubleWritable outputValue = new DoubleWritable();
+
 		public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String line = value.toString();
 			String[] splitLine = line.split("\\|");
 			
 			String category = splitLine[3];
 			double av_rating = Double.parseDouble(splitLine[6]);
-			Text outputKey = new Text();
-			DoubleWritable outputValue = new DoubleWritable();
 			
 			outputKey.set(category);
 			outputValue.set(av_rating);
@@ -68,7 +69,6 @@ public class YouTubeStudent20201018
 	}
 
 	public static class YouTubeStudent20201018Reducer1 extends Reducer<Text, DoubleWritable, Text, NullWritable> {
-	//	private DoubleWritable averageWritable = new DoubleWritable();
 		private Text category = new Text();
 		
 		private PriorityQueue<Youtube> queue;
@@ -83,8 +83,9 @@ public class YouTubeStudent20201018
 				sum+=value.get();
 				count+=1;
 			}
-
+			sum =(double)(Math.round(sum*100)/100.0);
 			double average = sum/count;
+			//System.out.println(key.toString()+","+sum+","+count+","+average);
 
 			insertYoutube(queue, key.toString(), average, topK);
 		}
@@ -98,7 +99,9 @@ public class YouTubeStudent20201018
                 protected void cleanup(Context context) throws IOException, InterruptedException{
                         while(queue.size() != 0){
                                 Youtube youtube = (Youtube)queue.remove();
-                                context.write(new Text(youtube.getString()), NullWritable.get());
+				String k = youtube.getString();
+				String key = k.replace("|", " ");
+                                context.write(new Text(key), NullWritable.get());
                         }
                 }
 
@@ -123,11 +126,9 @@ public class YouTubeStudent20201018
 		job1.setMapOutputValueClass(DoubleWritable.class);	
 		job1.setOutputKeyClass(Text.class);
 		job1.setOutputValueClass(NullWritable.class);
-		//FileOutputFormat.setOutputPath(job1, new Path(first_phase_result));
 		FileInputFormat.addInputPath(job1, new Path(otherArgs[0]));
 		FileOutputFormat.setOutputPath(job1, new Path(otherArgs[1]));
 		FileSystem.get(job1.getConfiguration()).delete(new Path(otherArgs[1]), true);
-                //FileSystem.get(job1.getConfiguration()).delete(new Path(first_phase_result), true);
                 System.exit(job1.waitForCompletion(true)? 0:1);
 
 	}
