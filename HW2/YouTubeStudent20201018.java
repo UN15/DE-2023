@@ -83,10 +83,7 @@ public class YouTubeStudent20201018
 				sum+=value.get();
 				count+=1;
 			}
-			sum =(double)(Math.round(sum*100)/100.0);
 			double average = sum/count;
-			//System.out.println(key.toString()+","+sum+","+count+","+average);
-
 			insertYoutube(queue, key.toString(), average, topK);
 		}
 
